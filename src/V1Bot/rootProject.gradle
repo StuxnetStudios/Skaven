@@ -1,0 +1,3 @@
+rootProject.name = 'Skaven'
+include 'Skaven'
+project(':Skaven').projectDir = file('Skaven')
