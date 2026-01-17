@@ -364,3 +364,59 @@ task zipForSubmit(type: Zip) {
   destinationDirectory = project.projectDir
   from sourceSets.main.allSource
 }
+
+// Add a helper and task to push the Skaven folder to origin
+def runCmd = { cmd ->
+  ByteArrayOutputStream out = new ByteArrayOutputStream()
+  exec {
+    commandLine = cmd
+    workingDir = project.rootDir
+    standardOutput = out
+    errorOutput = out
+    ignoreExitValue = true
+  }
+  return out.toString().trim()
+}
+
+task pushSkaven {
+  description = "Stage Skaven/, commit if needed, and push current branch to origin (uses --force-with-lease)."
+  group = "git"
+
+  doLast {
+    def branch = runCmd(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+    if (!branch) {
+      throw new GradleException("Could not determine current git branch.")
+    }
+    logger.quiet("Current branch: ${branch}")
+
+    logger.quiet("Staging Skaven/ ...")
+    runCmd(['git', 'add', '-A', 'Skaven'])
+
+    def staged = runCmd(['git', 'diff', '--cached', '--name-only'])
+    if (staged) {
+      logger.quiet("Committing staged changes...")
+      def msg = "Update Skaven: ${new Date().format(\"yyyy-MM-dd HH:mm:ss\")}"
+      def commitOut = runCmd(['git', 'commit', '-m', msg])
+      logger.quiet(commitOut ?: "Commit command completed.")
+    } else {
+      logger.quiet("No staged changes to commit.")
+    }
+
+    logger.quiet("Pushing to origin/${branch} with --force-with-lease ...")
+    def pushOut = runCmd(['git', 'push', '--force-with-lease', 'origin', branch])
+    logger.quiet(pushOut ?: "Push command completed.")
+  }
+}
+
+// Aliases so the user command "./gradlew.bat push Skaven" works as intended
+task push {
+  group = 'git'
+  description = 'Alias for pushSkaven'
+  dependsOn pushSkaven
+}
+
+task Skaven {
+  group = 'git'
+  description = 'Alias for pushSkaven'
+  dependsOn pushSkaven
+}
