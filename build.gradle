@@ -379,7 +379,7 @@ def runCmd = { cmd ->
 }
 
 task pushSkaven {
-  description = "Stage Skaven/, commit if needed, and push current branch to origin (uses --force-with-lease)."
+  description = "Stage src/skaven/, commit if needed, and push current branch to origin (uses --force-with-lease)."
   group = "git"
 
   doLast {
@@ -389,8 +389,8 @@ task pushSkaven {
     }
     logger.quiet("Current branch: ${branch}")
 
-    logger.quiet("Staging Skaven/ ...")
-    runCmd(['git', 'add', '-A', 'Skaven'])
+    logger.quiet("Staging src/skaven/ ...")
+    runCmd(['git', 'add', '-A', 'src/skaven'])
 
     def staged = runCmd(['git', 'diff', '--cached', '--name-only'])
     if (staged) {
